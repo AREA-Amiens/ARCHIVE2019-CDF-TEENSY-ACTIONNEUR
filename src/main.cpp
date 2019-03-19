@@ -1,13 +1,13 @@
 #include "actionneur.h"
-
+//v1
 
 //initialisation du moteur gauche
 
 byte a=0,etat=0,com=0,fair;
 long time2=0;
 
-AccelStepper motor_r(1, step_G, dir_G);//declaration du moteur gauche
-AccelStepper motor_t(1, step_D, dir_D);//declatation du moteur droit
+AccelStepper motor_r(1, step_r, dir_r);//declaration du moteur gauche
+AccelStepper motor_t(1, step_t, dir_t);//declatation du moteur droit
 
 Servo servo_d;
 Servo servo_g;
@@ -16,7 +16,7 @@ Servo servo_g;
 
 void setup() {
 
-  pinMode(pompe,OUPUT);
+  pinMode(pompe,OUTPUT);
   digitalWrite(pompe, LOW);
 
   Wire.begin(my_adr);
@@ -92,7 +92,7 @@ void loop() {
     break;
     case 4://sortir + allumer la ponpe
       motor_t.move(10);
-      digitalWrite(pompe, LOW);
+      digitalWrite(pompe, HIGH);
     break;
     case 5://rentré jusque la buté
 
