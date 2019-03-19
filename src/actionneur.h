@@ -39,8 +39,9 @@
 
 #define pompe 22
 
-#define stocage1 1
-#define stocage2 2
+#define stocage1 221
+#define stocage2 148
+#define repo     65
 
 #define pi 3.1415926536
 void IntrerrupTimer();

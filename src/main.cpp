@@ -133,9 +133,10 @@ void loop() {
           time2=0;
           while(time2!=2){
             Serial.println(time2);
-          }
+          }etat++;
         }
         else etat++;
+        if(etat==13)etat=1;
       }
     break;
   }
