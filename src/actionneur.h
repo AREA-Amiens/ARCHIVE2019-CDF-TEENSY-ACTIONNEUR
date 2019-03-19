@@ -39,6 +39,9 @@
 
 #define pompe 22
 
+#define stocage1 1
+#define stocage2 2
+
 #define pi 3.1415926536
 void IntrerrupTimer();
 void receiveEvent(int howMany);

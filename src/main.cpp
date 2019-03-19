@@ -1,13 +1,15 @@
 #include "actionneur.h"
-
+//v2
 
 //initialisation du moteur gauche
 
-byte a=0,etat=0,com=0,fair;
-long time2=0;
+byte a=0,etat=0,com=0,fair,palaistoket=0;
+int tdpalai[3]={10,20,30};
+long time2=0,rot=stocage1;
 
-AccelStepper motor_r(1, step_G, dir_G);//declaration du moteur gauche
-AccelStepper motor_t(1, step_D, dir_D);//declatation du moteur droit
+
+AccelStepper motor_r(1, step_r, dir_r);//declaration du moteur gauche
+AccelStepper motor_t(1, step_t, dir_t);//declatation du moteur droit
 
 Servo servo_d;
 Servo servo_g;
@@ -16,7 +18,7 @@ Servo servo_g;
 
 void setup() {
 
-  pinMode(pompe,OUPUT);
+  pinMode(pompe,OUTPUT);
   digitalWrite(pompe, LOW);
 
   Wire.begin(my_adr);
@@ -91,28 +93,54 @@ void loop() {
       }
     break;
     case 4://sortir + allumer la ponpe
-      motor_t.move(10);
-      digitalWrite(pompe, LOW);
+      motor_t.move(10);//sor pour chercher paller
+      digitalWrite(pompe, HIGH);//allume la pompe
+      etat=12;
     break;
     case 5://rentré jusque la buté
-
+      motor_t.move(-20);//rentre dans l'actioneur
+      etat=12;
     break;
-    case 6://rotation dans la zone de strocage
+    case 6://rotation dans la zone de stocage
+      motor_r.move(rot);//par dans la zonz stocage
+      palaistoket++;
+      if(palaistoket==3)rot=stocage2;//stocage 1 par defaut
+      etat=12;
     break;
     case 7://avancement dans la zone stocage
+      motor_t.move(tdpalai[palaistoket%3]);//pour la distantce a la quelle le lactioneur doit stokait le pallais
+      etat=12;
     break;
     case 8://coupe la ponpe la l'electrovane
+      digitalWrite(pompe,LOW);
+      etat=12;
     break;
     case 9://rentré en buté
+      motor_t.move(-tdpalai[palaistoket%3]);
+      etat=12;
     break;
     case 10://rotation sortie
+      motor_r.move(-rot);
+      etat=12;
     break;
     case 11://sortie
+      motor_t.move(20);
+      etat=12;
     break;
     case 12://différent etatpe d'attente
+      if(motor_t.isRunning()==false && motor_r.isRunning()==false){
+        if(etat==4||etat==8){
+          time2=0;
+          while(time2!=2){
+            Serial.println(time2);
+          }
+        }
+        else etat++;
+      }
     break;
-
   }
+  motor_t.run();//lancemant du moteur droit
+  motor_r.run();//lancemant du moteur gauche
 }
 void receiveEvent(int howMany){//fonction d'intérupetion l'or dun envoi du maitre
   byte i;//variable pour le for
