@@ -21,7 +21,7 @@
 #define step_D    11
 #define dir_D     12
 
-
+#define my_adr    20
 
 #define acceleration_rd  300//accélération(en mm s-2) du robot x 2coefficiant_go
 #define speed         100
@@ -40,3 +40,5 @@
 
 #define pi 3.1415926536
 void IntrerrupTimer();
+void receiveEvent(int howMany);
+void requestEvent();
