@@ -11,15 +11,15 @@
 
 //#define Led 22
 
-#define reset_G   13 // pin du moteur gauche
-#define sleep_G   15
-#define step_G    0
-#define dir_G     1
+#define reset_r   13 // pin du moteur gauche
+#define sleep_r   15
+#define step_r    0
+#define dir_r     1
 
-#define reset_D   9// pin du moteur droit
-#define sleep_D   10
-#define step_D    11
-#define dir_D     12
+#define reset_t   9// pin du moteur droit
+#define sleep_t   10
+#define step_t    11
+#define dir_t     12
 
 #define my_adr    20
 
@@ -37,6 +37,7 @@
 #define coeficien_go_rg   1//coefficiant determiné par rapport au diamètre de roue, sélection du pas(ici 1/4),le tout pour 1mm
 #define coeficien_go_rd   1
 
+#define pompe 22
 
 #define pi 3.1415926536
 void IntrerrupTimer();

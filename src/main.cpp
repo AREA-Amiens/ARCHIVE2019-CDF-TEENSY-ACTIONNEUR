@@ -6,8 +6,8 @@
 byte a=0,etat=0,com=0,fair;
 long time2=0;
 
-AccelStepper motor_G(1, step_G, dir_G);//declaration du moteur gauche
-AccelStepper motor_D(1, step_D, dir_D);//declatation du moteur droit
+AccelStepper motor_r(1, step_G, dir_G);//declaration du moteur gauche
+AccelStepper motor_t(1, step_D, dir_D);//declatation du moteur droit
 
 Servo servo_d;
 Servo servo_g;
@@ -16,26 +16,28 @@ Servo servo_g;
 
 void setup() {
 
+  pinMode(pompe,OUPUT);
+  digitalWrite(pompe, LOW);
+
   Wire.begin(my_adr);
-  Wire.onReceive(receiveEvent);//donne la fonction a ouvrire l'or de la réception de dune trasmition
+  Wire.onReceive(receiveEvent);
   Wire.onRequest(requestEvent);
-  // put your setup code here, to run once:
-  pinMode(reset_G, OUTPUT);    //le reset se fait à l'état bas
-  digitalWrite(reset_G, HIGH);
-  pinMode(sleep_G, OUTPUT);    //le sleep se met à l'état bas pour une carte fonctionelle
-  digitalWrite(sleep_G, HIGH);
 
-  motor_G.setSpeed(speed);
-  motor_G.setAcceleration(acceleration_rg);
+  pinMode(reset_r, OUTPUT);
+  digitalWrite(reset_r, HIGH);
+  pinMode(sleep_r, OUTPUT);
+  digitalWrite(sleep_r, HIGH);
 
-  //initialisation du moteur droit
-  pinMode(reset_D, OUTPUT);    //le reset se fait à l'état bas
-  digitalWrite(reset_D, HIGH);
-  pinMode(sleep_D, OUTPUT);    //le sleep se met à l'état bas pour une carte fonctionelle
-  digitalWrite(sleep_D, HIGH);
+  motor_r.setSpeed(speed);
+  motor_r.setAcceleration(acceleration_rg);
 
-  motor_D.setSpeed(speed);
-  motor_D.setAcceleration(acceleration_rd);
+  pinMode(reset_t, OUTPUT);
+  digitalWrite(reset_t, HIGH);
+  pinMode(sleep_t, OUTPUT);
+  digitalWrite(sleep_t, HIGH);
+
+  motor_t.setSpeed(speed);
+  motor_t.setAcceleration(acceleration_rd);
 
 
   MsTimer2::set(1000,IntrerrupTimer);//tout les  seconde
@@ -44,19 +46,13 @@ void setup() {
   servo_d.attach(22);
   servo_g.attach(23);
 //-----------------------------------------------------------------------------------------------------//
-  servo_d.write((int)50*0.7555555);//changer pour la mise a zero
-  //servo_g.write(0);
+  servo_d.write((int)5*0.7555555);//changer pour la mise a zero
   time2=0;
   while(time2!=2){
     Serial.println(time2);
   }
-  servo_g.write((int)(180-90)*0.75555555555);
+  servo_g.write((int)(180-3)*0.75555555555);
 //-------------------------------------------------------------------------------------------------------//
-
-//  delay(3000);
-//  servo_g.write((int)((180-90)*0.755555555));//180°à0° ecrire 136à6
-//  delay(95);
-//  servo_d.write((int)(90*0.755555555));//0°à180° ecrire 0à136
 etat =1;
 }
 
@@ -76,9 +72,9 @@ void loop() {
     case 2://ouveture eguille
     //--------------------------------------------------------------------------------------------------//
       //angle d'eguille ouver
-        servo_g.write((int)((180-90)*0.755555555));
+        servo_g.write((int)(180-95+5)*0.7555555555);//130 Max pour l'omologation
       if(time2==1){
-        servo_d.write((int)((90)*0.75555555));
+        servo_d.write((int)(94+3)*0.7555555);
         etat=1;
         com=0;
       }
@@ -94,23 +90,26 @@ void loop() {
         com=0;
       }
     break;
-    case 4:
+    case 4://sortir + allumer la ponpe
+      motor_t.move(10);
+      digitalWrite(pompe, LOW);
     break;
-    case 5:
+    case 5://rentré jusque la buté
+
     break;
-    case 6:
+    case 6://rotation dans la zone de strocage
     break;
-    case 7:
+    case 7://avancement dans la zone stocage
     break;
-    case 8:
+    case 8://coupe la ponpe la l'electrovane
     break;
-    case 9:
+    case 9://rentré en buté
     break;
-    case 10:
+    case 10://rotation sortie
     break;
-    case 11:
+    case 11://sortie
     break;
-    case 12:
+    case 12://différent etatpe d'attente
     break;
 
   }
