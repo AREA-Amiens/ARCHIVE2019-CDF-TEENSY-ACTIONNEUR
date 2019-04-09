@@ -14,7 +14,6 @@ AccelStepper motor_t(1, step_t, dir_t);//declatation du moteur droit
 Servo servo_d;
 Servo servo_g;
 
-//test alex
 
 void setup() {
 
