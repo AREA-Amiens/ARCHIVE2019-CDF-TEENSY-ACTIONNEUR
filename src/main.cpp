@@ -3,13 +3,13 @@
 
 //initialisation du moteur gauche
 
-byte a=0,etat=0,com=0,fair,palaistoket=0;
-int tdpalai[3]={10,20,30};
-long time2=0,rot=stocage1;
+byte a=0,b=0,etat=0,com=0,fair,palaistoket=0,i,recepetion_tram[2],fai=1,etatp,pp;
+int tdpalai[3]={95,73,48};
+long time2=0,rot=stocage2;
 
 
-AccelStepper motor_r(1, step_r, dir_r);//declaration du moteur gauche
-AccelStepper motor_t(1, step_t, dir_t);//declatation du moteur droit
+AccelStepper motorT(1, step_t, dir_t);//declaration du moteur gauche
+AccelStepper motorR(1, step_r, dir_r);//declatation du moteur droit
 
 Servo servo_d;
 Servo servo_g;
@@ -18,68 +18,99 @@ Servo servo_g;
 
 void setup() {
 
-  pinMode(pompe,OUTPUT);
-  digitalWrite(pompe, LOW);
+
+  pinMode(POMPE, OUTPUT);//bas gauche
+  digitalWrite(POMPE,LOW);//ne vert
+  pinMode(ELECTROVANE, OUTPUT);//bas droit
+  digitalWrite(ELECTROVANE,LOW);//en rouge
+
+  pinMode(FIN_COURCE_ROTATION, INPUT_PULLUP);//haut gauche
+  pinMode(FIN_COURCE_TRANSLATION, INPUT_PULLUP);//haut droit
 
   Wire.begin(my_adr);
   Wire.onReceive(receiveEvent);
   Wire.onRequest(requestEvent);
-
-  pinMode(reset_r, OUTPUT);
-  digitalWrite(reset_r, HIGH);
-  pinMode(sleep_r, OUTPUT);
-  digitalWrite(sleep_r, HIGH);
-
-  motor_r.setSpeed(speed);
-  motor_r.setAcceleration(acceleration_rg);
 
   pinMode(reset_t, OUTPUT);
   digitalWrite(reset_t, HIGH);
   pinMode(sleep_t, OUTPUT);
   digitalWrite(sleep_t, HIGH);
 
-  motor_t.setSpeed(speed);
-  motor_t.setAcceleration(acceleration_rd);
+  motorT.setSpeed(speed);
+  motorT.setAcceleration(500);
+
+  pinMode(reset_r, OUTPUT);
+  digitalWrite(reset_r, HIGH);
+  pinMode(sleep_r, OUTPUT);
+  digitalWrite(sleep_r, HIGH);
+
+  motorR.setMaxSpeed(1000);
+  motorR.setAcceleration(10000);
 
 
-  MsTimer2::set(1000,IntrerrupTimer);//tout les  seconde
+  MsTimer2::set(10,IntrerrupTimer);//tout les  seconde
   MsTimer2::start();
 
-  servo_d.attach(22);
-  servo_g.attach(23);
+  servo_d.attach(23);
+  servo_g.attach(22);
 //-----------------------------------------------------------------------------------------------------//
-  servo_d.write((int)5*0.7555555);//changer pour la mise a zero
+  servo_d.write((int)(160+20)*0.888);//changer pour la mise a zero
   time2=0;
-  while(time2!=2){
-    Serial.println(time2);
+  while(time2!=200){
+    Serial.print("");
   }
-  servo_g.write((int)(180-3)*0.75555555555);
+  servo_g.write((int)11*0.777);
 //-------------------------------------------------------------------------------------------------------//
-etat =1;
+  //delay(10000);
+  recalageTranslation();
+  recalageRotation();
+  actioneurAZero();
+
+
+//positif pour aller ver la zone de stocage
+
+
+
+etat=1;
+
+
 }
 
 void loop() {
+
+  //motorR.run();
+
   /*  if(b>10)MsTimer2::stop();
     if((int)(((float)b)/200)%2!=0){
       digitalWrite(Led,HIGH);
     }
     else digitalWrite(Led,LOW);*/
+
+//if(digitalRead(3)==1)Serial.println("mlkfdqs");
+//Serial.println(etat);
+
   switch(etat){
     case 1:    //attante de trame
       if(com==1){
-        etat=fair;
+        etat=recepetion_tram[0];
         time2=0;
+        fai=0;
       }
     break;
     case 2://ouveture eguille
     //--------------------------------------------------------------------------------------------------//
       //angle d'eguille ouver
-        servo_g.write((int)(180-95+5)*0.7555555555);//130 Max pour l'omologation
-      if(time2==1){
-        servo_d.write((int)(94+3)*0.7555555);
+      servo_g.write((int)(11+recepetion_tram[1])*0.777);
+      if(time2==100&&fai==0){
+        servo_d.write((int)(160-recepetion_tram[1])*0.888);//changer pour la mise a zero
+        time2=0;
+        fai=1;
+      }
+      if(time2==100&&fai==1){
         etat=1;
         com=0;
       }
+
     //---------------------------------------------------------------------------------------------------//
     break;
 
@@ -93,65 +124,143 @@ void loop() {
       }
     break;
     case 4://sortir + allumer la ponpe
-      motor_t.move(10);//sor pour chercher paller
-      digitalWrite(pompe, HIGH);//allume la pompe
-      etat=12;
+      motorT.move((long)(COEFICIEN_TRANSLATION*(SORTI_VANTOUSE-VANTOUSE_PRETE_SORTI)));//sor pour chercher paller
+      etatp=4;
+      etat=13;
+
     break;
-    case 5://rentré jusque la buté
-      motor_t.move(-20);//rentre dans l'actioneur
-      etat=12;
+    case 5:
+      time2=0;
+      digitalWrite(POMPE, HIGH);//allume la POMPE
+      etatp=5;
+      etat=13;
     break;
-    case 6://rotation dans la zone de stocage
-      motor_r.move(rot);//par dans la zonz stocage
+    case 6://rentré jusque la buté
+      motorT.move((long)(COEFICIEN_TRANSLATION*-SORTI_VANTOUSE));//rentre dans l'actioneur
+      etatp=6;
+      etat=13;
+    break;
+    case 7://rotation dans la zone de stocage
+      if(palaistoket>=3)rot=stocage1;//stocage 2 par defaut
+      motorR.move((long)((rot-repo)*COEFICIEN_ROTATION));//par dans la zonz stocage
+      //palaistoket++;
+      etatp=7;
+      etat=13;
+    break;
+    case 8://avancement dans la zone stocage
+      //time2=0;
+      Serial.println("palai ");
+      pp=palaistoket%3;
+      Serial.println(pp);
+      motorT.move(tdpalai[palaistoket%3]*COEFICIEN_TRANSLATION);//pour la distantce a la quelle le lactioneur doit stokait le pallais
+      etatp=8;
+      etat=13;
+    break;
+    case 9://coupe la ponpe la l'electrovane
+      time2=0;
+      digitalWrite(POMPE,LOW);
+      digitalWrite(ELECTROVANE,HIGH);
+      etatp=9;
+      etat=13;
+    break;
+    case 10://rentré en buté
+      digitalWrite(ELECTROVANE,LOW);
+      motorT.move(-tdpalai[palaistoket%3]*COEFICIEN_TRANSLATION);
+      etatp=10;
+      etat=13;
+    break;
+    case 11://rotation sortie
+      motorR.move(-(rot-repo)*COEFICIEN_ROTATION);
+      etatp=11;
+      etat=13;
+    break;
+    case 12://sortie
+      motorT.move(COEFICIEN_TRANSLATION*VANTOUSE_PRETE_SORTI);
+      etatp=12;
+      etat=13;
       palaistoket++;
-      if(palaistoket==3)rot=stocage2;//stocage 1 par defaut
-      etat=12;
     break;
-    case 7://avancement dans la zone stocage
-      motor_t.move(tdpalai[palaistoket%3]);//pour la distantce a la quelle le lactioneur doit stokait le pallais
-      etat=12;
-    break;
-    case 8://coupe la ponpe la l'electrovane
-      digitalWrite(pompe,LOW);
-      etat=12;
-    break;
-    case 9://rentré en buté
-      motor_t.move(-tdpalai[palaistoket%3]);
-      etat=12;
-    break;
-    case 10://rotation sortie
-      motor_r.move(-rot);
-      etat=12;
-    break;
-    case 11://sortie
-      motor_t.move(20);
-      etat=12;
-    break;
-    case 12://différent etatpe d'attente
-      if(motor_t.isRunning()==false && motor_r.isRunning()==false){
-        if(etat==4||etat==8){
-          time2=0;
-          while(time2!=2){
-            Serial.println(time2);
-          }etat++;
+    case 13://différent etatpe d'attente
+      if(motorR.isRunning()==false && motorT.isRunning()==false){
+        if(etatp==5||etatp==9){
+          if(time2>500){
+            etat=etatp+1;
+          }
         }
-        else etat++;
-        if(etat==13)etat=1;
+        else etat=etatp+1;
+        if(etat==14){
+          etat=1;
+          com=0;
+        }
       }
     break;
   }
-  motor_t.run();//lancemant du moteur droit
-  motor_r.run();//lancemant du moteur gauche
+  motorR.run();//lancemant du moteur droit
+  motorT.run();//lancemant du moteur gauche
 }
 void receiveEvent(int howMany){//fonction d'intérupetion l'or dun envoi du maitre
   byte i;//variable pour le for
-  fair=Wire.read();//rampli le tableau si avec les valeur de la transmition
+  for(i=0;i<howMany;i++)recepetion_tram[i]=Wire.read();//rampli le tableau si avec les valeur de la transmition
   com=1;// passe la comme a 1 pour l'éxecution de la trame en cour
 }
 void requestEvent(){//fonciton d'intérupetion l'or d une deamande de trame
   Wire.write(com);//le maitre lira la valeur de com
 }
+void recalageTranslation(){
+  motorT.move(20000);//moin pour sortire
+  while(digitalRead(FIN_COURCE_TRANSLATION)==1){
+    motorT.run();
+  }
+  motorT.setAcceleration(AXEL_T_FREINAGE_FIN_COURCE);
+  motorT.stop();
+  motorT.setAcceleration(AXEL_T_RECALAGE);
+  motorT.setCurrentPosition(0);
+  motorT.move(-400);
+  motorT.run();
+  while(motorT.isRunning()){
+    motorT.run();
+  }
+  motorT.move(40000);//moin pour sortire
+
+  while(digitalRead(FIN_COURCE_TRANSLATION)==1){
+    motorT.run();
+  }
+  motorT.setAcceleration(AXEL_T_FREINAGE_FIN_COURCE);
+  motorT.stop();
+  motorT.setAcceleration(AXEL_T_RECALAGE);
+}
+void recalageRotation(){
+  motorR.setCurrentPosition(0);
+
+  motorR.move(-5000);
+  motorR.run();
+  while(digitalRead(FIN_COURCE_ROTATION)){
+    motorR.run();
+  }
+  motorR.setAcceleration(AXEL_R_FREINAGE_FIN_COURCE);
+  motorR.stop();
+  motorR.setAcceleration(AXEL_R_RECALAGE);
+  motorR.setCurrentPosition(0);
+
+
+}
+void actioneurAZero(){
+  motorR.move(575);
+  motorR.run();
+  while(motorR.isRunning()){
+    motorR.run();
+  }
+  motorR.setCurrentPosition(0);
+  motorT.setCurrentPosition(0);
+  motorT.move((long)VANTOUSE_PRETE_SORTI*COEFICIEN_TRANSLATION);
+  motorT.run();
+  while(motorT.isRunning()){
+    motorT.run();
+  }
+  motorT.setCurrentPosition(0);
+}
 void IntrerrupTimer (){
   time2++;
-  //Serial.println("reuasie2");
+//  Serial.print("time ");
+//  Serial.println(time2);
 }
