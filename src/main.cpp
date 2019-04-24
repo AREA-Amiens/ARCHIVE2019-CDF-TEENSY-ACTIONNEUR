@@ -1,5 +1,5 @@
 #include "actionneur.h"
-//v2
+//v0
 
 //initialisation du moteur gauche
 
@@ -57,7 +57,7 @@ void setup() {
   servo_d.write((int)(160+20)*0.888);//changer pour la mise a zero
   time2=0;
   while(time2!=200){
-    Serial.print("");
+    Serial.print("a");
   }
   servo_g.write((int)11*0.777);
 //-------------------------------------------------------------------------------------------------------//
@@ -77,7 +77,7 @@ etat=1;
 }
 
 void loop() {
-
+Serial.println(com);
   //motorR.run();
 
   /*  if(b>10)MsTimer2::stop();
@@ -93,6 +93,7 @@ void loop() {
     case 1:    //attante de trame
       if(com==1){
         etat=recepetion_tram[0];
+        Serial.println(etat);
         time2=0;
         fai=0;
       }
@@ -194,6 +195,45 @@ void loop() {
         }
       }
     break;
+    case 14:
+      motorT.move((long)(COEFICIEN_TRANSLATION*(-VANTOUSE_PRETE_SORTI)));
+      etatp=14;
+      etat=20;
+    break;
+    case 15:
+      motorR.move((long)(COEFICIEN_ROTATION*(stocage1-repo)));
+      etatp=15;
+      etat=20;
+    break;
+    case 16:
+      motorT.move((long)(COEFICIEN_TRANSLATION*VANTOUSE_PRETE_SORTI));
+      etatp=16;
+      etat=20;
+    break;
+    case 17:
+      motorT.move((long)(COEFICIEN_TRANSLATION*(-VANTOUSE_PRETE_SORTI)));
+      etatp=17;
+      etat=20;
+    break;
+    case 18:
+      motorR.move((long)(COEFICIEN_ROTATION*(-stocage1+repo)));
+      etatp=18;
+      etat=20;
+    break;
+    case 19:
+      motorT.move((long)(COEFICIEN_TRANSLATION*VANTOUSE_PRETE_SORTI));
+      etatp=19;
+      etat=20;
+    break;
+    case 20:
+      if(motorR.isRunning()==false && motorT.isRunning()==false){
+        etat=etatp+1;
+        if(etat==21){
+          etat=1;
+          com=0;
+        }
+      }
+    break;
   }
   motorR.run();//lancemant du moteur droit
   motorT.run();//lancemant du moteur gauche
@@ -202,6 +242,7 @@ void receiveEvent(int howMany){//fonction d'intérupetion l'or dun envoi du mait
   byte i;//variable pour le for
   for(i=0;i<howMany;i++)recepetion_tram[i]=Wire.read();//rampli le tableau si avec les valeur de la transmition
   com=1;// passe la comme a 1 pour l'éxecution de la trame en cour
+
 }
 void requestEvent(){//fonciton d'intérupetion l'or d une deamande de trame
   Wire.write(com);//le maitre lira la valeur de com
