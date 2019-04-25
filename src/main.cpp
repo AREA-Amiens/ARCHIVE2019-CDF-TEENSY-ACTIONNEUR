@@ -3,7 +3,7 @@
 
 //initialisation du moteur gauche
 
-byte a=0,b=0,etat=0,com=0,fair,palaistoket=0,i,recepetion_tram[2],fai=1,etatp,pp;
+byte a=0,b=0,etat=0,com=1,fair,palaistoket=0,i,recepetion_tram[2],fai=1,etatp,pp;
 int tdpalai[3]={95,73,48};
 long time2=0,rot=stocage2;
 
@@ -17,7 +17,7 @@ Servo servo_g;
 
 
 void setup() {
-
+//  delay(8000);
 
   pinMode(POMPE, OUTPUT);//bas gauche
   digitalWrite(POMPE,LOW);//ne vert
@@ -51,17 +51,31 @@ void setup() {
   MsTimer2::set(10,IntrerrupTimer);//tout les  seconde
   MsTimer2::start();
 
+
+/*  while (com!=1) {
+    //Serial.println("x ");
+  }
+  com=0;*/
+//-----------------------------------------------------------------------------------------------------//
+
+//-------------------------------------------------------------------------------------------------------//
+  //delay(10000);
+
+
+  com=0;
+  while (com!=1) {
+    Serial.print("2 ");
+    //Serial.println(com);
+  }
+  com=0;
   servo_d.attach(23);
   servo_g.attach(22);
-//-----------------------------------------------------------------------------------------------------//
   servo_d.write((int)(160+20)*0.888);//changer pour la mise a zero
   time2=0;
   while(time2!=200){
-    Serial.print("a");
+    Serial.println("a");
   }
   servo_g.write((int)11*0.777);
-//-------------------------------------------------------------------------------------------------------//
-  //delay(10000);
   recalageTranslation();
   recalageRotation();
   actioneurAZero();
@@ -77,7 +91,7 @@ etat=1;
 }
 
 void loop() {
-Serial.println(com);
+//Serial.println(com);
   //motorR.run();
 
   /*  if(b>10)MsTimer2::stop();
@@ -86,14 +100,14 @@ Serial.println(com);
     }
     else digitalWrite(Led,LOW);*/
 
-//if(digitalRead(3)==1)Serial.println("mlkfdqs");
-//Serial.println(etat);
+//if(digitalRead(3)==1)//Serial.printlnln("mlkfdqs");
+////Serial.printlnln(etat);
 
   switch(etat){
     case 1:    //attante de trame
       if(com==1){
         etat=recepetion_tram[0];
-        Serial.println(etat);
+        //Serial.printlnln(etat);
         time2=0;
         fai=0;
       }
@@ -150,9 +164,9 @@ Serial.println(com);
     break;
     case 8://avancement dans la zone stocage
       //time2=0;
-      Serial.println("palai ");
+      //Serial.printlnln("palai ");
       pp=palaistoket%3;
-      Serial.println(pp);
+      //Serial.printlnln(pp);
       motorT.move(tdpalai[palaistoket%3]*COEFICIEN_TRANSLATION);//pour la distantce a la quelle le lactioneur doit stokait le pallais
       etatp=8;
       etat=13;
@@ -196,12 +210,14 @@ Serial.println(com);
       }
     break;
     case 14:
+      if(recepetion_tram[1]==1)rot=stocage1;
+      else rot=stocage2;
       motorT.move((long)(COEFICIEN_TRANSLATION*(-VANTOUSE_PRETE_SORTI)));
       etatp=14;
       etat=20;
     break;
     case 15:
-      motorR.move((long)(COEFICIEN_ROTATION*(stocage1-repo)));
+      motorR.move((long)(COEFICIEN_ROTATION*(rot-repo)));
       etatp=15;
       etat=20;
     break;
@@ -216,7 +232,7 @@ Serial.println(com);
       etat=20;
     break;
     case 18:
-      motorR.move((long)(COEFICIEN_ROTATION*(-stocage1+repo)));
+      motorR.move((long)(COEFICIEN_ROTATION*(-rot+repo)));
       etatp=18;
       etat=20;
     break;
@@ -242,7 +258,7 @@ void receiveEvent(int howMany){//fonction d'intérupetion l'or dun envoi du mait
   byte i;//variable pour le for
   for(i=0;i<howMany;i++)recepetion_tram[i]=Wire.read();//rampli le tableau si avec les valeur de la transmition
   com=1;// passe la comme a 1 pour l'éxecution de la trame en cour
-
+  for(i=0;i<howMany;i++)Serial.println(recepetion_tram[i]);
 }
 void requestEvent(){//fonciton d'intérupetion l'or d une deamande de trame
   Wire.write(com);//le maitre lira la valeur de com
@@ -302,6 +318,6 @@ void actioneurAZero(){
 }
 void IntrerrupTimer (){
   time2++;
-//  Serial.print("time ");
-//  Serial.println(time2);
+//  //Serial.println("time ");
+//  //Serial.printlnln(time2);
 }
